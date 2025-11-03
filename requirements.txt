@@ -2,7 +2,6 @@ asgiref==3.8.1
 astroid==3.3.9
 certifi==2025.7.14
 charset-normalizer==3.4.2
-cidm6325 @ file:///C:/Users/jquie/Documents/cidm6325/CIDM6325
 colorama==0.4.6
 dill==0.4.0
 Django==5.2.6
