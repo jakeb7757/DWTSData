@@ -1,0 +1,15 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+.gitignore
+*.xlsx
+*.png
+season_week_averages.csv.xlsx
+Book1.xlsx
+tests/
+old_people.py
+README.md
+.vscode/

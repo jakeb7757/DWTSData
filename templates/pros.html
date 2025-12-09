@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DWTS Pros Statistics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Dancing with the Stars</h1>
+            <p class="subtitle">Pro Dancers Statistics</p>
+            <nav>
+                <a href="/" class="nav-link">Stars</a>
+                <a href="/pros" class="nav-link active">Pros</a>
+            </nav>
+        </header>
+
+        <div class="search-container">
+            <div class="input-wrapper">
+                <input type="text" id="search-input" placeholder="Search for a pro..." autocomplete="off">
+                <div id="autocomplete-list" class="autocomplete-items"></div>
+            </div>
+            <button id="search-btn">Search</button>
+        </div>
+
+        <div id="results-container"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
