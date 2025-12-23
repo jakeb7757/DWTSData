@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dancing with the Stars{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Dancing with the Stars</h1>
+            <p class="subtitle">{% block subtitle %}Contestant Archive{% endblock %}</p>
+            <nav>
+                <a href="/" class="nav-link {% if active_page == 'stars' %}active{% endif %}">Stars</a>
+                <a href="/pros" class="nav-link {% if active_page == 'pros' %}active{% endif %}">Pros</a>
+
+                <div class="dropdown">
+                    <a href="/analytics/robbed"
+                        class="nav-link dropdown-toggle {% if active_page == 'analytics' %}active{% endif %}">Analytics
+                        ▾</a>
+                    <div class="dropdown-content">
+                        <a href="/analytics/robbed">The Robbed List</a>
+                        <a href="/analytics/overachievers">Overachievers</a>
+                        <a href="/analytics/hall_of_fame">Hall of Fame</a>
+                        <a href="/analytics/seasons">Season Rankings</a>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block scripts %}
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    {% endblock %}
+</body>
+
+</html>

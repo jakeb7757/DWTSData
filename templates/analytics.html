@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block title %}DWTS Analytics{% endblock %}
+
+{% block subtitle %}Deep Dive Analytics{% endblock %}
+
+{% block content %}
+<div id="loading" style="text-align: center; color: var(--text-muted);">Calculating stats...</div>
+
+<div id="analytics-content" style="display: none;" data-category="{{ category }}">
+
+    {% if category == 'all' or category == 'robbed' %}
+    <div class="section-card">
+        <h2 class="analytics-title">The Robbed List</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-muted); font-style: italic;">
+            Contestants with the largest gap between their high scores and low placement.
+        </p>
+        <ul id="robbed-list" class="rank-list"></ul>
+    </div>
+    {% endif %}
+
+    {% if category == 'all' or category == 'overachievers' %}
+    <div class="section-card">
+        <h2 class="analytics-title">Overachievers</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-muted); font-style: italic;">
+            Contestants who placed much higher than their scores suggested.
+        </p>
+        <ul id="overachievers-list" class="rank-list"></ul>
+    </div>
+    {% endif %}
+
+    {% if category == 'all' or category == 'hall_of_fame' %}
+    <div class="section-card">
+        <h2 class="analytics-title">Hall of Fame</h2>
+        <p style="margin-bottom: 1rem; color: var(--text-muted); font-style: italic;">
+            Highest career average scores.
+        </p>
+        <ul id="hall-of-fame-list" class="rank-list"></ul>
+    </div>
+    {% endif %}
+
+    {% if category == 'all' or category == 'seasons' %}
+    <div class="section-card">
+        <h2 class="analytics-title">Season Rankings</h2>
+        <div style="overflow-x: auto;">
+            <table class="dances-table">
+                <thead>
+                    <tr>
+                        <th>Season</th>
+                        <th>Avg Score</th>
+                        <th>Winner</th>
+                        <th>Top Scorer</th>
+                    </tr>
+                </thead>
+                <tbody id="season-stats-body"></tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='analytics.js') }}"></script>
+{% endblock %}

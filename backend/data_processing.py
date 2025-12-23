@@ -16,6 +16,10 @@ def load_and_process_data(filepath):
     score_cols = [col for col in df.columns if 'score' in col]
     for col in score_cols:
         df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+    # Ensure placement and season are numeric
+    df['placement'] = pd.to_numeric(df['placement'], errors='coerce')
+    df['season'] = pd.to_numeric(df['season'], errors='coerce')
 
     # Fill NaN in score columns with 0 (assuming N/A means no dance/score)
     # Be careful with averages, but for raw scores 0 might be appropriate if they didn't dance.

@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Pros: /api/pros/search, /api/pros/names
     // So if base is /api/pros, endpoints are /search and /names.
     // If base is /api, endpoints are /search and /names.
-    
+
     // Actually, let's define full endpoints
     const SEARCH_URL = isProsPage ? '/api/pros/search' : '/api/search';
     const NAMES_URL = isProsPage ? '/api/pros/names' : '/api/names';
@@ -252,6 +252,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     searchBtn.addEventListener('click', () => performSearch());
+
+    // Check for query parameter on load
+    const urlParams = new URLSearchParams(window.location.search);
+    const query = urlParams.get('q');
+    if (query) {
+        searchInput.value = query;
+        performSearch(query);
+    }
 });
 
 

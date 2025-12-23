@@ -1,9 +1,11 @@
 from flask import Flask, render_template, jsonify, request
 from flask_talisman import Talisman
 from backend.data_processing import load_and_process_data, get_contestant_data, get_contestant_names, get_pros_data, get_pro_names, get_pro_details
+from backend.dwts_analytics import get_analytics_summary
 import os
 
 app = Flask(__name__)
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 # Define CSP to allow Google Fonts and local resources
 csp = {
@@ -25,7 +27,26 @@ df = load_and_process_data(DATA_PATH)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', active_page='stars')
+
+@app.route('/pros')
+def pros():
+    return render_template('pros.html', active_page='pros')
+
+@app.route('/analytics')
+@app.route('/analytics/<category>')
+def analytics(category='all'):
+    valid_categories = ['robbed', 'overachievers', 'hall_of_fame', 'seasons']
+    if category != 'all' and category not in valid_categories:
+        # Fallback for invalid categories
+        category = 'all'
+    
+    return render_template('analytics.html', category=category, active_page='analytics')
+
+@app.route('/api/analytics')
+def get_analytics():
+    results = get_analytics_summary(df)
+    return jsonify(results)
 
 @app.route('/api/search')
 def search():
@@ -47,10 +68,6 @@ def names():
     
     results = get_contestant_names(df, query)
     return jsonify(results)
-
-@app.route('/pros')
-def pros():
-    return render_template('pros.html')
 
 @app.route('/api/pros')
 def get_pros():
