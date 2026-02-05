@@ -1,11 +1,23 @@
 from flask import Flask, render_template, jsonify, request
 from flask_talisman import Talisman
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from backend.data_processing import load_and_process_data, get_contestant_data, get_contestant_names, get_pros_data, get_pro_names, get_pro_details
 from backend.dwts_analytics import get_analytics_summary
 import os
+import secrets
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+
+# Rate limiting to prevent abuse
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
 
 # Define CSP to allow Google Fonts and local resources
 csp = {
@@ -49,9 +61,10 @@ def get_analytics():
     return jsonify(results)
 
 @app.route('/api/search')
+@limiter.limit("30 per minute")
 def search():
-    query = request.args.get('q', '')
-    if not query:
+    query = request.args.get('q', '').strip()
+    if not query or len(query) > 100:
         return jsonify([])
     
     results = get_contestant_data(df, query)
@@ -61,9 +74,10 @@ def search():
         return jsonify([])
 
 @app.route('/api/names')
+@limiter.limit("60 per minute")
 def names():
-    query = request.args.get('q', '')
-    if not query:
+    query = request.args.get('q', '').strip()
+    if not query or len(query) > 100:
         return jsonify([])
     
     results = get_contestant_names(df, query)
@@ -75,18 +89,20 @@ def get_pros():
     return jsonify(results)
 
 @app.route('/api/pros/names')
+@limiter.limit("60 per minute")
 def pro_names():
-    query = request.args.get('q', '')
-    if not query:
+    query = request.args.get('q', '').strip()
+    if not query or len(query) > 100:
         return jsonify([])
     
     results = get_pro_names(df, query)
     return jsonify(results)
 
 @app.route('/api/pros/search')
+@limiter.limit("30 per minute")
 def pro_search():
-    query = request.args.get('q', '')
-    if not query:
+    query = request.args.get('q', '').strip()
+    if not query or len(query) > 100:
         return jsonify([])
     
     results = get_pro_details(df, query)
@@ -99,5 +115,3 @@ def internal_error(error):
 if __name__ == '__main__':
     # NEVER use debug=True in production
     app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
-
-FLASK_ENV ='production'

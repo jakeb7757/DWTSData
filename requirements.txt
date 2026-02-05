@@ -1,11 +1,11 @@
 # Core Application dependencies
-Flask
-pandas
-numpy
+Flask>=3.0,<4.0
+pandas>=2.0,<3.0
+numpy>=1.24,<3.0
 
 # Production WSGI Server
-gunicorn
+gunicorn>=21.2,<23.0
 
-# Other App Dependencies
-flask-talisman
-requests
+# Security & Middleware
+flask-talisman>=1.0,<2.0
+flask-limiter>=3.5,<4.0

@@ -2,7 +2,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const loading = document.getElementById('loading');
     const content = document.getElementById('analytics-content');
 
-    if (!content) return; // Should not happen on analytics page
+    if (!content) return;
+
+    /**
+     * Sanitize a string for safe HTML insertion (prevents XSS).
+     */
+    function escapeHTML(str) {
+        if (str === null || str === undefined) return '';
+        const div = document.createElement('div');
+        div.textContent = String(str);
+        return div.innerHTML;
+    }
 
     try {
         const response = await fetch('/api/analytics');
@@ -23,11 +33,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 li.innerHTML = `
                     <div class="rank-number">${index + 1}</div>
                     <div class="rank-details">
-                        <div class="rank-name"><a href="/?q=${encodeURIComponent(item.name)}" class="analytics-link">${item.name}</a></div>
-                        <div class="rank-meta">Season ${item.season} • Partner: ${item.partner}</div>
+                        <div class="rank-name"><a href="/?q=${encodeURIComponent(item.name)}" class="analytics-link">${escapeHTML(item.name)}</a></div>
+                        <div class="rank-meta">Season ${escapeHTML(item.season)} • Partner: ${escapeHTML(item.partner)}</div>
                     </div>
                     <div class="rank-stat stat-highlight">
-                        +${item.diff} Spots
+                        +${escapeHTML(item.diff)} Spots
                         <div style="font-size: 0.8em; color: var(--text-muted); font-weight: normal;">
                             Should: ${getOrdinal(item.should_have_placed)} / Actual: ${getOrdinal(item.actual_placement)}
                         </div>
@@ -46,11 +56,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 li.innerHTML = `
                     <div class="rank-number">${index + 1}</div>
                     <div class="rank-details">
-                        <div class="rank-name"><a href="/?q=${encodeURIComponent(item.name)}" class="analytics-link">${item.name}</a></div>
-                        <div class="rank-meta">Season ${item.season} • Partner: ${item.partner}</div>
+                        <div class="rank-name"><a href="/?q=${encodeURIComponent(item.name)}" class="analytics-link">${escapeHTML(item.name)}</a></div>
+                        <div class="rank-meta">Season ${escapeHTML(item.season)} • Partner: ${escapeHTML(item.partner)}</div>
                     </div>
                     <div class="rank-stat stat-negative">
-                        ${item.diff} Spots
+                        ${escapeHTML(item.diff)} Spots
                         <div style="font-size: 0.8em; color: var(--text-muted); font-weight: normal;">
                             Should: ${getOrdinal(item.should_have_placed)} / Actual: ${getOrdinal(item.actual_placement)}
                         </div>
@@ -69,11 +79,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 li.innerHTML = `
                     <div class="rank-number">${index + 1}</div>
                     <div class="rank-details">
-                        <div class="rank-name"><a href="/?q=${encodeURIComponent(item.name)}" class="analytics-link">${item.name}</a></div>
-                        <div class="rank-meta">Season ${item.season}</div>
+                        <div class="rank-name"><a href="/?q=${encodeURIComponent(item.name)}" class="analytics-link">${escapeHTML(item.name)}</a></div>
+                        <div class="rank-meta">Season ${escapeHTML(item.season)}</div>
                     </div>
                     <div class="rank-stat">
-                        ${item.average_score} Avg
+                        ${escapeHTML(item.average_score)} Avg
                     </div>
                 `;
                 hofList.appendChild(li);
@@ -86,12 +96,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             data.season_stats.forEach(season => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${season.season}</td>
-                    <td>${season.average_score}</td>
-                    <td><a href="/?q=${encodeURIComponent(season.winner)}" class="analytics-link">${season.winner}</a></td>
+                    <td>${escapeHTML(season.season)}</td>
+                    <td>${escapeHTML(season.average_score)}</td>
+                    <td><a href="/?q=${encodeURIComponent(season.winner)}" class="analytics-link">${escapeHTML(season.winner)}</a></td>
                     <td>
-                        <a href="/?q=${encodeURIComponent(season.top_star)}" class="analytics-link">${season.top_star}</a>
-                        <span style="font-size: 0.8em; color: var(--text-muted);">(${season.top_star_avg})</span>
+                        <a href="/?q=${encodeURIComponent(season.top_star)}" class="analytics-link">${escapeHTML(season.top_star)}</a>
+                        <span style="font-size: 0.8em; color: var(--text-muted);">(${escapeHTML(season.top_star_avg)})</span>
                     </td>
                 `;
                 seasonBody.appendChild(tr);
