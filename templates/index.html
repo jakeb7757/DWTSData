@@ -1,17 +1,185 @@
 {% extends "layout.html" %}
-
-{% block title %}DWTS Contestant Query{% endblock %}
-
-{% block subtitle %}Contestant Archive{% endblock %}
-
+{% from 'components.html' import search, star_details %}
 {% block content %}
-<div class="search-container">
-    <div class="input-wrapper">
-        <input type="text" id="search-input" placeholder="Search for a star..." autocomplete="off">
-        <div id="autocomplete-list" class="autocomplete-items"></div>
-    </div>
-    <button id="search-btn">Search</button>
-</div>
-
-<div id="results-container"></div>
+    {% if not query %}
+        <section class="hero">
+            <div class="hero-copy">
+                <p class="eyebrow">
+                    <span class="tiny-star"
+                          aria-hidden="true">✦</span> {{ archive.seasons }} seasons of Dancing with the Stars
+                </p>
+                <h1>
+                    Every star has
+                    <br>
+                    a <em>story.</em>
+                </h1>
+                <p class="hero-description">
+                    The perfect tens. The surprise exits. The mirrorball moments.
+                    <br class="desktop-break">
+                    Explore the numbers behind your favorite nights in the ballroom.
+                </p>
+                <a class="text-link"
+                   href="#explore">Find your favorite season <span aria-hidden="true">↓</span>
+                </a>
+            </div>
+            <div class="hero-art" aria-hidden="true">
+                <span class="orbit orbit-one"></span>
+                <span class="orbit orbit-two"></span>
+                <span class="spark spark-one">✦</span>
+                <span class="spark spark-two">✧</span>
+                <span class="spark spark-three">✦</span>
+                <div class="ball-wire"></div>
+                <div class="mirrorball">
+                    <div class="mirrorball-grid"></div>
+                </div>
+                <span class="art-caption">THE BALLROOM, BY THE NUMBERS</span>
+                <span class="art-number">01 — {{ archive.last }}</span>
+            </div>
+        </section>
+        <div class="archive-strip" aria-label="Archive statistics">
+            <div>
+                <strong>{{ archive.seasons }}</strong>
+                <span>seasons of sparkle</span>
+            </div>
+            <div>
+                <strong>{{ archive.stars }}</strong>
+                <span>celebrity contestants</span>
+            </div>
+            <div>
+                <strong>{{ archive.pros }}</strong>
+                <span>professional dancers</span>
+            </div>
+            <p>
+                One stage.
+                <br>
+                <em>A thousand stories.</em>
+            </p>
+        </div>
+    {% else %}
+        <section class="page-intro">
+            <p class="eyebrow">The celebrity archive</p>
+            <h1>
+                A closer <em>look.</em>
+            </h1>
+            <p>The scores, the partnerships, and the journey.</p>
+        </section>
+    {% endif %}
+    <section class="explore-section" id="explore">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Meet the cast</p>
+                <h2>{{ 'Search the stars' if query else 'Step into the ballroom' }}</h2>
+            </div>
+            <span class="section-aside">From first steps to final bows.</span>
+        </div>
+        {{ search(query) }}
+        {% if query %}
+            <div class="results-heading">
+                <p>
+                    {{ details|length }} {{ 'result' if details|length == 1 else 'results' }} for <strong>“{{ query }}”</strong>
+                </p>
+                <a href="{{ url_for('index') }}#explore">← Back to all stars</a>
+            </div>
+            <div id="results-container">
+                {% for person in details %}{{ star_details(person) }}{% else %}
+                    <div class="empty-state">
+                        <span aria-hidden="true">✧</span>
+                        <h2>No stars found this time.</h2>
+                        <p>Try a first name, last name, or a shorter spelling.</p>
+                        <a class="text-link" href="{{ url_for('index') }}#explore">Browse the archive ↗</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <form class="filter-bar"
+                  method="get"
+                  action="{{ url_for('index') }}#explore">
+                <div class="filter-fields">
+                    <label for="season">
+                        Season
+                        <select id="season" name="season">
+                            {% for season in seasons %}
+                                <option value="{{ season }}"
+                                        {% if season == selected_season %}selected{% endif %}>Season {{ season }}{% if season == archive.last %} · Latest in archive{% endif %}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label for="sort">
+                        Sort by
+                        <select id="sort" name="sort">
+                            <option value="placement"
+                                    {% if sort == 'placement' %}selected{% endif %}>Final placement</option>
+                            <option value="score"
+                                    {% if sort == 'score' %}selected{% endif %}>Highest score</option>
+                            <option value="name" {% if sort == 'name' %}selected{% endif %}>Name A–Z</option>
+                        </select>
+                    </label>
+                    <button class="filter-button" type="submit">
+                        Apply <span aria-hidden="true">↗</span>
+                    </button>
+                </div>
+                <span>{{ contestants|length }} stars · Season {{ selected_season }}</span>
+            </form>
+            <div class="contestant-grid">
+                {% for person in contestants %}
+                    <a class="cast-card"
+                       href="{{ url_for('index', q=person.celebrity_name) }}#explore">
+                        <div class="cast-top">
+                            <span class="monogram tone-{{ loop.index0 % 5 }}" aria-hidden="true">{{ person.celebrity_name.split()[0][0] }}{{ person.celebrity_name.split()[-1][0] }}</span>
+                            <span class="card-placement {% if person.placement == 1 %}winner{% endif %}">
+                                {% if person.placement == 1 %}
+                                    <span aria-hidden="true">✦</span> Winner{% else %}{{ person.placement|ordinal }} place{% endif %}
+                            </span>
+                        </div>
+                        <p class="card-kicker">{{ person.celebrity_industry }}</p>
+                        <h3>{{ person.celebrity_name }}</h3>
+                        <p class="partner">with {{ person.ballroom_partner }}</p>
+                        <div class="cast-bottom">
+                            <span>
+                                <strong>{{ '%.2f'|format(person.average_score) }}</strong>
+                                <span class="score-unit">/ 10</span>
+                                <small>AVG. JUDGE SCORE</small>
+                            </span>
+                            <span class="circle-arrow" aria-hidden="true">↗</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </section>
+    <section class="discovery-section">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">There’s more to the story</p>
+                <h2>Beyond the mirrorball</h2>
+            </div>
+        </div>
+        <div class="discovery-grid">
+            <a class="discovery-card discovery-dark"
+               href="{{ url_for('analytics', category='robbed') }}">
+                <span class="eyebrow">01 / The score gap</span>
+                <h3>
+                    Great scores.
+                    <br>
+                    Unexpected goodbyes.
+                </h3>
+                <p>When the leaderboard and the final result tell different stories.</p>
+                <span class="discovery-link">Explore the score gaps <span aria-hidden="true">↗</span>
+                </span>
+                <span class="discovery-decoration" aria-hidden="true">✧</span>
+            </a>
+            <a class="discovery-card discovery-pink" href="{{ url_for('pros') }}">
+                <span class="eyebrow">02 / Behind every star</span>
+                <h3>
+                    The partners.
+                    <br>
+                    The choreography. The pros.
+                </h3>
+                <p>Meet the dancers who bring the ballroom to life, season after season.</p>
+                <span class="discovery-link">Meet the professionals <span aria-hidden="true">↗</span>
+                </span>
+            </a>
+        </div>
+    </section>
 {% endblock %}

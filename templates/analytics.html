@@ -1,66 +1,101 @@
 {% extends "layout.html" %}
-
-{% block title %}DWTS Analytics{% endblock %}
-
-{% block subtitle %}Deep Dive Analytics{% endblock %}
-
+{% block title %}By the Numbers · The Ballroom Archive{% endblock %}
 {% block content %}
-<div id="loading" style="text-align: center; color: var(--text-muted);">Calculating stats...</div>
-
-<div id="analytics-content" style="display: none;" data-category="{{ category }}">
-
-    {% if category == 'all' or category == 'robbed' %}
-    <div class="section-card">
-        <h2 class="analytics-title">The Robbed List</h2>
-        <p style="margin-bottom: 1rem; color: var(--text-muted); font-style: italic;">
-            Contestants with the largest gap between their high scores and low placement.
-        </p>
-        <ul id="robbed-list" class="rank-list"></ul>
-    </div>
+    <section class="page-intro">
+        <p class="eyebrow">A different view from the judges’ table</p>
+        <h1>
+            Let the numbers <em>dance.</em>
+        </h1>
+        <p>Standout scores, surprise results, and the gaps in between.</p>
+    </section>
+    <nav class="analytics-tabs" aria-label="Analytics categories">
+        {% for value, label in [('all', 'Overview'), ('robbed', 'The score gap'), ('overachievers', 'Beyond the scores'), ('hall_of_fame', 'Hall of fame'), ('seasons', 'Season rankings')] %}
+            <a href="{{ url_for('analytics', category=value) }}"
+               {% if category == value %}aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+    </nav>
+    <p class="data-note">
+        Averages reflect recorded weekly judge scores. Score rank excludes audience votes. <a href="#about-the-data">How to read these numbers ↗</a>
+    </p>
+    {% for key, title, description in [('robbed', 'Great scores. Earlier exits.', 'The largest gaps where a contestant’s final placement was below their season score rank.'), ('overachievers', 'Beyond the scores', 'Contestants whose final placement exceeded their season score rank.'), ('hall_of_fame', 'The high-score club', 'The ten highest contestant-season averages in the archive. Returning stars can appear more than once.')] %}
+        {% if category == "all" or category == key %}
+            <section class="section-card">
+                <div class="section-heading">
+                    <div>
+                        <p class="eyebrow">{{ 'Season averages' if key == 'hall_of_fame' else 'Scores & standings' }}</p>
+                        <h2>{{ title }}</h2>
+                    </div>
+                </div>
+                <p class="section-description">{{ description }}</p>
+                <ol class="rank-list">
+                    {% for item in stats[key] %}
+                        <li class="rank-item">
+                            <span class="rank-number"
+                                  aria-hidden="true">{{ '%02d'|format(loop.index) }}</span>
+                            <div class="rank-details">
+                                <a class="rank-name"
+                                   href="{{ url_for('index', q=item.name) }}#explore">{{ item.name }} <span aria-hidden="true">↗</span>
+                                </a>
+                                <p>Season {{ item.season }}{% if item.partner is defined %} · {{ item.partner }}{% endif %}</p>
+                            </div>
+                            <div class="rank-stat">
+                                {% if key == "hall_of_fame" %}
+                                    <strong>{{ '%.2f'|format(item.average_score) }}<small> / 10</small>
+                                    </strong>
+                                    <span>{{ item.placement|ordinal }} place</span>
+                                {% else %}
+                                    <strong>{{ item.diff|abs }} <small>places</small>
+                                    </strong>
+                                    <span>Score rank {{ item.should_have_placed|ordinal }} · Finished {{ item.actual_placement|ordinal }}</span>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ol>
+            </section>
+        {% endif %}
+    {% endfor %}
+    {% if category == "all" or category == "seasons" %}
+        <section class="section-card">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">Across the years</p>
+                    <h2>Season rankings</h2>
+                </div>
+            </div>
+            <p class="section-description">Seasons ordered by their contestants’ mean average judge score. Scoring formats and judging standards vary across seasons.</p>
+            <div class="table-scroll"
+                 tabindex="0"
+                 role="region"
+                 aria-label="Season rankings">
+                <table>
+                    <caption class="sr-only">Season rankings by average judge score</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Season</th>
+                            <th scope="col">Avg. score</th>
+                            <th scope="col">Mirrorball winner</th>
+                            <th scope="col">Highest average</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for season in stats.season_stats %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('index', season=season.season) }}#explore">Season {{ season.season }}</a>
+                                </td>
+                                <td>{{ '%.2f'|format(season.average_score) }}</td>
+                                <td>
+                                    <a href="{{ url_for('index', q=season.winner) }}#explore">{{ season.winner }}</a>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('index', q=season.top_star) }}#explore">{{ season.top_star }}</a> <span class="muted">({{ '%.2f'|format(season.top_star_avg) }})</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
     {% endif %}
-
-    {% if category == 'all' or category == 'overachievers' %}
-    <div class="section-card">
-        <h2 class="analytics-title">Overachievers</h2>
-        <p style="margin-bottom: 1rem; color: var(--text-muted); font-style: italic;">
-            Contestants who placed much higher than their scores suggested.
-        </p>
-        <ul id="overachievers-list" class="rank-list"></ul>
-    </div>
-    {% endif %}
-
-    {% if category == 'all' or category == 'hall_of_fame' %}
-    <div class="section-card">
-        <h2 class="analytics-title">Hall of Fame</h2>
-        <p style="margin-bottom: 1rem; color: var(--text-muted); font-style: italic;">
-            Highest career average scores.
-        </p>
-        <ul id="hall-of-fame-list" class="rank-list"></ul>
-    </div>
-    {% endif %}
-
-    {% if category == 'all' or category == 'seasons' %}
-    <div class="section-card">
-        <h2 class="analytics-title">Season Rankings</h2>
-        <div style="overflow-x: auto;">
-            <table class="dances-table">
-                <thead>
-                    <tr>
-                        <th>Season</th>
-                        <th>Avg Score</th>
-                        <th>Winner</th>
-                        <th>Top Scorer</th>
-                    </tr>
-                </thead>
-                <tbody id="season-stats-body"></tbody>
-            </table>
-        </div>
-    </div>
-    {% endif %}
-
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script src="{{ url_for('static', filename='analytics.js') }}"></script>
 {% endblock %}

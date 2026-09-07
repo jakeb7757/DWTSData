@@ -1,0 +1,158 @@
+{% macro search(query, is_pro=false) %}
+    <form class="search-container"
+          role="search"
+          action="{{ url_for('pros' if is_pro else 'index') }}"
+          method="get">
+        <label class="sr-only"
+               for="search-input">Search {{ 'professional dancers' if is_pro else 'celebrities' }}</label>
+        <span class="search-icon" aria-hidden="true">⌕</span>
+        <div class="input-wrapper">
+            <input type="search"
+                   name="q"
+                   id="search-input"
+                   value="{{ query }}"
+                   placeholder="{{ 'Find a professional dancer…' if is_pro else 'Find your favorite star…' }}"
+                   autocomplete="off"
+                   maxlength="100"
+                   data-names-url="{{ url_for('pro_names' if is_pro else 'names') }}">
+            <div id="autocomplete-list"
+                 class="autocomplete-items"
+                 role="listbox"
+                 aria-label="Search suggestions"
+                 hidden></div>
+        </div>
+        <button class="search-button" type="submit">
+            Search <span aria-hidden="true">↗</span>
+        </button>
+    </form>
+    <div id="search-status" class="sr-only" role="status"></div>
+{% endmacro %}
+{% macro star_details(person) %}
+    <article class="detail-card">
+        <div class="detail-header">
+            <div>
+                <p class="eyebrow">Season {{ person.season }} · Celebrity profile</p>
+                <h2>{{ person.name }}</h2>
+                <p>
+                    Partnered with <a href="{{ url_for('pros', q=person.partner) }}">{{ person.partner }}</a>
+                </p>
+            </div>
+            <span class="placement-badge">{{ person.actual_placement|ordinal }} place</span>
+        </div>
+        <div class="stats-grid">
+            <div>
+                <span class="stat-label">Average judge score</span>
+                <strong>{{ '%.2f'|format(person.average_score) }}<small> / 10</small>
+                </strong>
+            </div>
+            <div>
+                <span class="stat-label">Highest weekly total</span>
+                <strong>{{ '%g'|format(person.highest_score) }}</strong>
+            </div>
+            <div>
+                <span class="stat-label">Score rank in season</span>
+                <strong>{{ person.should_have_placed|ordinal }}</strong>
+            </div>
+        </div>
+        <div class="section-heading compact">
+            <h3>Week by week</h3>
+            <span>Recorded judge scores</span>
+        </div>
+        <div class="score-chart" aria-label="Weekly total scores">
+            {% for dance in person.dances %}
+                <div class="chart-column">
+                    <span>{{ '%g'|format(dance.total_score) }}</span>
+                    <svg viewBox="0 0 32 100" preserveAspectRatio="none" aria-hidden="true">
+                        <rect class="chart-track" x="0" y="0" width="32" height="100" rx="2" />
+                        <rect class="chart-bar" x="0" y="{{ 100 - dance.total_score / person.highest_score * 100 }}" width="32" height="{{ dance.total_score / person.highest_score * 100 }}" rx="2" />
+                    </svg>
+                    <small>Week {{ dance.week }}</small>
+                </div>
+            {% endfor %}
+        </div>
+        <details class="history">
+            <summary>View full scoring breakdown</summary>
+            <div class="table-scroll"
+                 tabindex="0"
+                 role="region"
+                 aria-label="Weekly scores">
+                <table>
+                    <caption class="sr-only">{{ person.name }} · Season {{ person.season }} weekly scores</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Week</th>
+                            <th scope="col">Total score</th>
+                            <th scope="col">Individual judges</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for dance in person.dances %}
+                            <tr>
+                                <td>Week {{ dance.week }}</td>
+                                <td>{{ '%g'|format(dance.total_score) }}</td>
+                                <td>{{ dance.judges_scores|join(" / ") }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </details>
+    </article>
+{% endmacro %}
+{% macro pro_details(person) %}
+    <article class="detail-card">
+        <div class="detail-header">
+            <div>
+                <p class="eyebrow">Professional dancer</p>
+                <h2>{{ person.name }}</h2>
+                <p>{{ person.seasons_count }} appearances in the archive</p>
+            </div>
+            <span class="placement-badge">{{ person.wins }} {{ 'win' if person.wins == 1 else 'wins' }}</span>
+        </div>
+        <div class="stats-grid">
+            <div>
+                <span class="stat-label">Mirrorball wins</span>
+                <strong>{{ person.wins }}</strong>
+            </div>
+            <div>
+                <span class="stat-label">Average placement</span>
+                <strong>{{ '%.2f'|format(person.average_placement) }}</strong>
+            </div>
+            <div>
+                <span class="stat-label">Seasons ranked #1 by score</span>
+                <strong>{{ person.should_have_won }}</strong>
+            </div>
+        </div>
+        <h3>Every partnership. Every season.</h3>
+        <div class="table-scroll"
+             tabindex="0"
+             role="region"
+             aria-label="Season history">
+            <table>
+                <caption class="sr-only">{{ person.name }} season history</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Season</th>
+                        <th scope="col">Celebrity partner</th>
+                        <th scope="col">Avg. score</th>
+                        <th scope="col">Result</th>
+                        <th scope="col">Score rank</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for season in person.seasons %}
+                        <tr>
+                            <td>{{ season.season }}</td>
+                            <td>
+                                <a href="{{ url_for('index', q=season.partner) }}">{{ season.partner }}</a>
+                            </td>
+                            <td>{{ '%.2f'|format(season.average_score) }}</td>
+                            <td>{{ season.placement_text }}</td>
+                            <td>{{ season.should_have_placed|ordinal }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+{% endmacro %}
