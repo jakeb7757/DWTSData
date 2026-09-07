@@ -1,46 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Dancing with the Stars{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
-        rel="stylesheet">
-    {% block extra_head %}{% endblock %}
-</head>
-
-<body>
-    <div class="container">
-        <header>
-            <h1>Dancing with the Stars</h1>
-            <p class="subtitle">{% block subtitle %}Contestant Archive{% endblock %}</p>
-            <nav>
-                <a href="/" class="nav-link {% if active_page == 'stars' %}active{% endif %}">Stars</a>
-                <a href="/pros" class="nav-link {% if active_page == 'pros' %}active{% endif %}">Pros</a>
-
-                <div class="dropdown">
-                    <a href="/analytics/robbed"
-                        class="nav-link dropdown-toggle {% if active_page == 'analytics' %}active{% endif %}">Analytics
-                        ▾</a>
-                    <div class="dropdown-content">
-                        <a href="/analytics/robbed">The Robbed List</a>
-                        <a href="/analytics/overachievers">Overachievers</a>
-                        <a href="/analytics/hall_of_fame">Hall of Fame</a>
-                        <a href="/analytics/seasons">Season Rankings</a>
-                    </div>
-                </div>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="theme-color" content="#722f42">
+        <meta name="description"
+              content="Explore {{ archive.seasons }} seasons of Dancing with the Stars. Discover contestants, professional dancers, scores, and the stories behind the standings.">
+        <title>{% block title %}The Ballroom Archive · DWTS{% endblock %}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&display=swap"
+              rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+    </head>
+    <body>
+        <a class="skip-link" href="#main">Skip to content</a>
+        <header class="site-header shell">
+            <a class="brand"
+               href="{{ url_for('index') }}"
+               aria-label="The Ballroom Archive home">
+                <span class="brand-symbol" aria-hidden="true">✳</span>
+                <span>THE BALLROOM<span class="brand-small">ARCHIVE</span>
+                </span>
+            </a>
+            <nav class="main-nav" aria-label="Main navigation">
+                {% for key, endpoint, label in [('stars', 'index', 'The stars'), ('pros', 'pros', 'The pros'), ('analytics', 'analytics', 'By the numbers')] %}
+                    <a href="{{ url_for(endpoint) }}"
+                       {% if active_page == key %}aria-current="page"{% endif %}>{{ label }}</a>
+                {% endfor %}
             </nav>
+            <span class="header-note">Dancing with the Stars, revisited.</span>
         </header>
-
-        {% block content %}{% endblock %}
-    </div>
-
-    {% block scripts %}
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
-    {% endblock %}
-</body>
-
+        <main id="main" class="shell">
+            {% block content %}{% endblock %}
+            <details class="methodology" id="about-the-data">
+                <summary>
+                    Behind the numbers <span>About this archive & the scoring</span>
+                </summary>
+                <div class="methodology-body">
+                    <p>An independent fan project covering seasons {{ archive.first }}–{{ archive.last }} of the U.S. Dancing with the Stars. This is a historical archive, not a live results service. Not affiliated with ABC, Disney, or the show.</p>
+                    <p>
+                        <strong>Average judge score</strong> is the mean of each contestant’s recorded weekly average judge scores, excluding zero and missing weeks. <strong>Score rank</strong> orders these averages within a season; tied scores share a rank. It does not model audience votes or prove who deserved to win.
+                    </p>
+                    <p>Contestants compete for different numbers of weeks, and judging panels, scoring formats, and difficulty vary. Weekly totals are shown as recorded and may use different scales. Cross-season comparisons are descriptive, not adjusted for these differences.</p>
+                </div>
+            </details>
+        </main>
+        <footer class="site-footer shell">
+            <a class="footer-brand"
+               href="{{ url_for('index') }}">The Ballroom Archive <span aria-hidden="true">✳</span>
+            </a>
+            <span>Made for the fans who remember every dance.</span>
+            <a href="#about-the-data">Seasons {{ archive.first }}–{{ archive.last }} · About the data ↗</a>
+        </footer>
+    </body>
 </html>

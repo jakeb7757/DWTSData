@@ -1,17 +1,53 @@
 {% extends "layout.html" %}
-
-{% block title %}DWTS Pros Statistics{% endblock %}
-
-{% block subtitle %}Pro Dancers Statistics{% endblock %}
-
+{% from 'components.html' import search, pro_details %}
+{% block title %}The Pros · The Ballroom Archive{% endblock %}
 {% block content %}
-<div class="search-container">
-    <div class="input-wrapper">
-        <input type="text" id="search-input" placeholder="Search for a pro..." autocomplete="off">
-        <div id="autocomplete-list" class="autocomplete-items"></div>
-    </div>
-    <button id="search-btn">Search</button>
-</div>
-
-<div id="results-container"></div>
+    <section class="page-intro">
+        <p class="eyebrow">The talent behind the transformations</p>
+        <h1>
+            Born for the <em>ballroom.</em>
+        </h1>
+        <p>Every partnership is a new chapter. Explore the careers of {{ archive.pros }} professional dancers.</p>
+    </section>
+    {{ search(query, true) }}
+    {% if query %}
+        <div class="results-heading">
+            <p>
+                {{ details|length }} {{ 'result' if details|length == 1 else 'results' }} for <strong>“{{ query }}”</strong>
+            </p>
+            <a href="{{ url_for('pros') }}">← All professionals</a>
+        </div>
+        {% for person in details %}{{ pro_details(person) }}{% else %}
+            <div class="empty-state">
+                <h2>No professionals found.</h2>
+                <p>Try a first name or a shorter spelling.</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="section-heading">
+            <h2>The professionals</h2>
+            <span>Ordered by wins, then average placement</span>
+        </div>
+        <div class="contestant-grid">
+            {% for person in professionals %}
+                <a class="cast-card" href="{{ url_for('pros', q=person.name) }}">
+                    <div class="cast-top">
+                        <span class="monogram tone-{{ loop.index0 % 5 }}"
+                              aria-hidden="true">{{ person.name.split()[0][0] }}{{ person.name.split()[-1][0] }}</span>
+                        <span class="card-placement {% if person.wins %}winner{% endif %}">{{ person.wins }} {{ 'win' if person.wins == 1 else 'wins' }}</span>
+                    </div>
+                    <p class="card-kicker">Professional dancer</p>
+                    <h3>{{ person.name }}</h3>
+                    <p class="partner">{{ person.seasons_count }} season appearances</p>
+                    <div class="cast-bottom">
+                        <span>
+                            <strong>{{ '%.2f'|format(person.average_placement) }}</strong>
+                            <small>AVERAGE PLACEMENT</small>
+                        </span>
+                        <span class="circle-arrow" aria-hidden="true">↗</span>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% endblock %}

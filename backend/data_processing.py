@@ -64,12 +64,12 @@ def get_contestant_names(df, query):
         return []
     
     # Case-insensitive partial match
-    match = df[df['celebrity_name'].str.contains(query, case=False, na=False)]
+    match = df[df['celebrity_name'].str.contains(query, case=False, na=False, regex=False)]
     
     if match.empty:
         return []
         
-    return match['celebrity_name'].tolist()
+    return match['celebrity_name'].drop_duplicates().tolist()
 
 def get_contestant_data(df, name_query):
     """
@@ -79,7 +79,7 @@ def get_contestant_data(df, name_query):
         return None
         
     # Case-insensitive partial match
-    match = df[df['celebrity_name'].str.contains(name_query, case=False, na=False)]
+    match = df[df['celebrity_name'].str.contains(name_query, case=False, na=False, regex=False)]
     
     if match.empty:
         return None
@@ -237,5 +237,4 @@ def get_pro_details(df, name_query):
         })
         
     return results
-
 

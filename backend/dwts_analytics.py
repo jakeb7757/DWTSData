@@ -12,6 +12,7 @@ def get_analytics_summary(df):
     # Calculate placement difference: Actual - Should Have (Positive = Robbed, Negative = Overachieved)
     # Example: Placed 5th, Should Have 1st. Diff = 4 (Robbed)
     # Example: Placed 1st, Should Have 5th. Diff = -4 (Overachieved)
+    df = df.copy()
     df['placement_diff'] = df['placement'] - df['should_have_placed']
 
     # --- Robbed List ---

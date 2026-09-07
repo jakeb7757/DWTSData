@@ -15,7 +15,7 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=["600 per hour", "120 per minute"],
     storage_uri="memory://"
 )
 
@@ -37,13 +37,50 @@ Talisman(app, content_security_policy=csp, force_https=force_https)
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'dancing_with_the_stars_dataset.csv')
 df = load_and_process_data(DATA_PATH)
 
+if df is None or df.empty:
+    raise RuntimeError('The contestant archive dataset is missing or empty.')
+
+SEASONS = sorted(df['season'].dropna().astype(int).unique().tolist(), reverse=True)
+ARCHIVE = {'seasons': len(SEASONS), 'first': min(SEASONS), 'last': max(SEASONS),
+           'stars': df['celebrity_name'].nunique(), 'pros': df['ballroom_partner'].nunique()}
+
+
+@app.context_processor
+def archive_context():
+    return {'archive': ARCHIVE}
+
+
+@app.template_filter('ordinal')
+def ordinal(value):
+    try:
+        number = int(value)
+    except (ValueError, TypeError, OverflowError):
+        return '—'
+    suffix = 'th' if 10 <= number % 100 <= 20 else {1: 'st', 2: 'nd', 3: 'rd'}.get(number % 10, 'th')
+    return f'{number}{suffix}'
+
 @app.route('/')
 def index():
-    return render_template('index.html', active_page='stars')
+    query = request.args.get('q', '').strip()[:100]
+    season = request.args.get('season', type=int)
+    if season not in SEASONS:
+        season = SEASONS[0]
+    sort = request.args.get('sort', 'placement')
+    if sort not in ('placement', 'score', 'name'):
+        sort = 'placement'
+    column = {'placement': 'placement', 'score': 'average_score', 'name': 'celebrity_name'}[sort]
+    contestants = df[df['season'] == season].sort_values(column, ascending=sort != 'score')
+    details = (get_contestant_data(df, query) or []) if query else []
+    return render_template('index.html', active_page='stars', seasons=SEASONS,
+                           selected_season=season, sort=sort, query=query,
+                           contestants=contestants.to_dict('records'), details=details)
 
 @app.route('/pros')
 def pros():
-    return render_template('pros.html', active_page='pros')
+    query = request.args.get('q', '').strip()[:100]
+    return render_template('pros.html', active_page='pros', query=query,
+                           professionals=get_pros_data(df),
+                           details=get_pro_details(df, query) if query else [])
 
 @app.route('/analytics')
 @app.route('/analytics/<category>')
@@ -53,7 +90,8 @@ def analytics(category='all'):
         # Fallback for invalid categories
         category = 'all'
     
-    return render_template('analytics.html', category=category, active_page='analytics')
+    return render_template('analytics.html', category=category, active_page='analytics',
+                           stats=get_analytics_summary(df))
 
 @app.route('/api/analytics')
 def get_analytics():
